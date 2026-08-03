@@ -1,0 +1,14 @@
+{
+  "name": "Lighter",
+  "short_name": "Lighter",
+  "description": "Everything, made smaller.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FAF7F1",
+  "theme_color": "#FAF7F1",
+  "icons": [
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}
