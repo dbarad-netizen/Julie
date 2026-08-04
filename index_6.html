@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Lighter</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Lighter">
+<meta name="theme-color" content="#FAF7F1">
+<style>
+  :root{
+    --bg:#FAF7F1; --card:#FFFFFF; --ink:#33322D; --ink-soft:#7A776E; --ink-faint:#ABA89E;
+    --accent:#5E8266; --accent-soft:#EAF1EB; --accent-deep:#48664F;
+    --sun:#F3EBDD; --line:#EDE8DE; --radius:22px; --shadow:0 6px 24px rgba(90,80,60,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+    color:var(--ink); display:flex; justify-content:center;
+    overscroll-behavior-y:none;
+  }
+  #phone{width:100%;max-width:430px;min-height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;
+    padding:max(env(safe-area-inset-top),20px) 24px calc(env(safe-area-inset-bottom) + 24px);overflow-y:auto}
+  .screen.active{display:flex;animation:fadeIn .3s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .brand{font-size:15px;letter-spacing:.06em;color:var(--ink-faint);font-weight:600;margin-bottom:6px}
+  .back{background:none;border:none;color:var(--ink-soft);font-size:15px;font-weight:600;
+    padding:8px 0;margin-bottom:4px;cursor:pointer;text-align:left;width:fit-content;font-family:inherit}
+  .btn{border:none;border-radius:18px;cursor:pointer;font-family:inherit;font-size:17px;font-weight:650;
+    padding:17px 22px;width:100%;transition:transform .08s ease}
+  .btn:active{transform:scale(.97)}
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 6px 18px rgba(94,130,102,.28)}
+  .btn-soft{background:var(--accent-soft);color:var(--accent-deep)}
+  .btn-ghost{background:none;color:var(--ink-soft);font-weight:600;padding:14px}
+  .stack{display:flex;flex-direction:column;gap:12px}
+  .spacer{flex:1}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--sun);color:#8A7A55;
+    border-radius:100px;font-size:13px;font-weight:650;padding:5px 12px}
+  .quiet-link{background:none;border:none;color:var(--ink-faint);font-size:14px;font-weight:600;
+    text-align:center;padding:10px;cursor:pointer;width:100%;font-family:inherit}
+
+  /* WELCOME */
+  #welcome{justify-content:center;text-align:center}
+  #welcome .logo{font-size:44px;margin-bottom:10px}
+  #welcome h1{font-size:30px;font-weight:770}
+  #welcome p{color:var(--ink-soft);font-size:16px;line-height:1.5;margin:14px 0 30px}
+  #nameInput{width:100%;border:none;border-radius:18px;background:var(--card);box-shadow:var(--shadow);
+    font-family:inherit;font-size:18px;padding:18px 20px;text-align:center;color:var(--ink);margin-bottom:14px}
+  #nameInput:focus{outline:2px solid #C6D8CA}
+
+  /* TODAY */
+  #today .hello{font-size:30px;font-weight:750;line-height:1.2;margin:18px 0 4px}
+  #today .date{color:var(--ink-soft);font-size:15px;margin-bottom:26px}
+  .summary{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;margin-bottom:14px}
+  .summary .big{font-size:22px;font-weight:750;line-height:1.35}
+  .summary .big em{color:var(--accent-deep);font-style:normal}
+  .summary .calm{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);
+    color:var(--ink-soft);font-size:15px;display:flex;align-items:center;gap:8px}
+  .summary .calm .dot{width:9px;height:9px;border-radius:50%;background:#9DBBA4;flex:none}
+  .allclear{text-align:center;padding:36px 10px}
+  .allclear .big{font-size:22px;font-weight:750}
+  .allclear p{color:var(--ink-soft);margin-top:8px;font-size:15px}
+  .waiting{background:var(--sun);border-radius:16px;padding:14px 18px;margin-bottom:14px;
+    display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .waiting span{font-size:14.5px;color:#8A7A55;font-weight:600;line-height:1.35}
+  .waiting button{border:none;background:#fff;border-radius:100px;font-family:inherit;font-size:14px;
+    font-weight:700;color:#8A7A55;padding:9px 16px;cursor:pointer;flex:none}
+
+  /* DUMP */
+  #dump h1,#sort h1{font-size:26px;font-weight:750;margin:10px 0 6px}
+  #dump .sub,#sort .sub{color:var(--ink-soft);font-size:15.5px;line-height:1.45;margin-bottom:20px}
+  #dumpInput{width:100%;min-height:120px;border:none;border-radius:var(--radius);background:var(--card);
+    box-shadow:var(--shadow);resize:none;font-family:inherit;font-size:18px;line-height:1.5;padding:20px;color:var(--ink)}
+  #dumpInput::placeholder{color:var(--ink-faint)}
+  #dumpInput:focus{outline:2px solid #C6D8CA}
+  .got-it{display:flex;align-items:center;gap:10px;background:var(--accent-soft);border-radius:16px;
+    padding:14px 16px;color:var(--accent-deep);font-size:15px;font-weight:600;opacity:0;transition:opacity .25s;min-height:52px}
+  .got-it.show{opacity:1}
+  .got-it .check{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+
+  /* SORT */
+  .sort-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px;
+    margin:6px 0 18px;min-height:190px;display:flex;flex-direction:column;justify-content:center;gap:10px;animation:cardIn .3s ease}
+  @keyframes cardIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+  .sort-card.shrinking{align-items:center;justify-content:center;color:var(--ink-faint);font-size:15px;font-weight:600}
+  .shimmer{display:flex;gap:6px;margin-top:10px}
+  .shimmer span{width:8px;height:8px;border-radius:50%;background:#CFC9BC;animation:pulse 1s infinite}
+  .shimmer span:nth-child(2){animation-delay:.15s}
+  .shimmer span:nth-child(3){animation-delay:.3s}
+  @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+  .sort-card .title{font-size:21px;font-weight:750;line-height:1.3}
+  .sort-card .first{color:var(--ink-soft);font-size:15.5px;line-height:1.45}
+  .sort-card .first b{color:var(--accent-deep);font-weight:700}
+  .reveal{background:none;border:none;color:var(--ink-faint);font-size:13px;font-weight:600;
+    cursor:pointer;text-align:left;padding:0;font-family:inherit;margin-top:2px}
+  .raw{display:none;background:var(--bg);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--ink-soft);line-height:1.45}
+  .raw.show{display:block}
+  .sort-btns{display:flex;gap:12px}
+  .sort-btns .btn{flex:1}
+  .sort-progress{display:flex;gap:7px;justify-content:center;margin-top:18px}
+  .sort-progress i{width:7px;height:7px;border-radius:50%;background:#DDD7CA}
+  .sort-progress i.done{background:var(--accent)}
+
+  /* FOCUS */
+  #focus{background:linear-gradient(180deg,#F3F0E8 0%,var(--bg) 40%)}
+  #focus .just{color:var(--ink-soft);font-size:16px;font-weight:600;margin-bottom:14px}
+  #focus .step{font-size:32px;font-weight:770;line-height:1.25;letter-spacing:-.01em}
+  #focus .task-meta{margin-top:22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  #focus .task-name{color:var(--ink-soft);font-size:15.5px;font-weight:600}
+  .focus-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;padding:10px 2px}
+  .focus-secondary{display:flex;gap:12px}
+  .focus-secondary .btn{flex:1;font-size:15px;padding:14px}
+
+  /* DONE */
+  #done{align-items:center;justify-content:center;text-align:center}
+  .ring{width:110px;height:110px;border-radius:50%;background:var(--accent-soft);display:flex;
+    align-items:center;justify-content:center;margin:0 auto 26px;animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  .ring svg{width:54px;height:54px}
+  .ring path{stroke:var(--accent);stroke-width:7;fill:none;stroke-linecap:round;stroke-linejoin:round;
+    stroke-dasharray:60;stroke-dashoffset:60;animation:draw .5s .2s ease forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  #done h1{font-size:26px;font-weight:750}
+  #done p{color:var(--ink-soft);margin-top:8px;font-size:16px}
+  #done .stack{width:100%;margin-top:34px}
+
+  /* EVERYTHING */
+  #everything h1{font-size:24px;font-weight:750;margin:8px 0 4px}
+  #everything .sub{color:var(--ink-soft);font-size:15px;margin-bottom:18px;line-height:1.45}
+  .pile-item{background:var(--card);border-radius:16px;padding:15px 18px;box-shadow:var(--shadow)}
+  .pile-item .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .pile-item .t{font-size:16px;font-weight:600;line-height:1.35}
+  .pile-item.done-item .t{opacity:.5;text-decoration:line-through;text-decoration-color:var(--ink-faint)}
+  .pile-item .tag{color:var(--ink-faint);font-size:13px;font-weight:600;flex:none}
+  .pile-actions{display:flex;gap:8px;margin-top:10px}
+  .pile-actions button{border:none;border-radius:100px;font-family:inherit;font-size:13.5px;font-weight:700;
+    padding:8px 14px;cursor:pointer}
+  .pa-today{background:var(--accent-soft);color:var(--accent-deep)}
+  .pa-drop{background:var(--bg);color:var(--ink-faint)}
+</style>
+</head>
+<body>
+<div id="phone">
+
+  <section class="screen" id="welcome">
+    <div>
+      <div class="logo">🪶</div>
+      <h1>Lighter</h1>
+      <p>Everything, made smaller.<br>Dump what's in your head, and it comes back as cliff notes.</p>
+      <input id="nameInput" placeholder="What should I call you?" autocomplete="given-name">
+      <div class="stack">
+        <button class="btn btn-primary" onclick="finishWelcome()">Let's go</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="today">
+    <div class="brand">LIGHTER</div>
+    <div class="hello" id="hello"></div>
+    <div class="date" id="dateLine"></div>
+    <div id="waitingBox"></div>
+    <div id="summaryBox"></div>
+    <div class="spacer"></div>
+    <div class="stack">
+      <button class="btn btn-primary" id="startBtn" onclick="startFocus()">Show me one thing</button>
+      <button class="btn btn-soft" onclick="openDump()">My head is full — let me dump</button>
+      <button class="quiet-link" onclick="show('everything')">everything else, if you want it</button>
+    </div>
+  </section>
+
+  <section class="screen" id="dump">
+    <button class="back" onclick="show('today')">‹ Never mind</button>
+    <h1>Get it out of your head.</h1>
+    <p class="sub">All of it, in one messy blob — lists, run-on sentences, half-thoughts. Don't organize anything. That's my job.</p>
+    <textarea id="dumpInput" style="min-height:220px" placeholder="e.g. ugh car registration before it expires, also need a gift for Sam's birthday, call the vet back, and the kitchen is a disaster…"></textarea>
+    <div class="spacer"></div>
+    <div class="stack">
+      <button class="btn btn-primary" onclick="submitDump()">Make it lighter</button>
+    </div>
+  </section>
+
+  <section class="screen" id="sort">
+    <div class="brand">LIGHTER</div>
+    <h1>Quick gut calls.</h1>
+    <p class="sub">No thinking hard. Just: does this belong to today, or not?</p>
+    <div id="sortCardWrap"></div>
+    <div class="sort-btns" id="sortBtns" style="display:none">
+      <button class="btn btn-soft" onclick="sortPick('later')">Not today</button>
+      <button class="btn btn-primary" onclick="sortPick('today')">Today</button>
+    </div>
+    <div class="sort-progress" id="sortDots"></div>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost" onclick="finishSort(true)">Finish the rest later</button>
+  </section>
+
+  <section class="screen" id="focus">
+    <button class="back" onclick="show('today')">‹ Today</button>
+    <div class="focus-wrap">
+      <div class="just">Just this. Nothing else right now.</div>
+      <div class="step" id="focusStep"></div>
+      <div class="task-meta">
+        <span class="task-name" id="focusName"></span>
+        <span class="chip" id="focusTime"></span>
+      </div>
+    </div>
+    <div class="stack">
+      <button class="btn btn-primary" onclick="markDone()">Done</button>
+      <div class="focus-secondary">
+        <button class="btn btn-soft" onclick="notThisOne()">Not this one</button>
+        <button class="btn btn-soft" onclick="snooze()">Later today</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="done">
+    <div style="width:100%">
+      <div class="ring"><svg viewBox="0 0 52 52"><path d="M14 27 L23 36 L39 18"/></svg></div>
+      <h1 id="doneMsg">That's one.</h1>
+      <p id="doneSub">Nicely done.</p>
+      <div class="stack">
+        <button class="btn btn-primary" id="nextBtn" onclick="startFocus()">Next thing</button>
+        <button class="btn btn-ghost" onclick="show('today')">Take a break — you've earned it</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="everything">
+    <button class="back" onclick="show('today')">‹ Back to today</button>
+    <h1>Everything else</h1>
+    <p class="sub">It's all safely here. None of it needs you right now.</p>
+    <div class="stack" id="pileList"></div>
+    <div style="height:20px"></div>
+  </section>
+
+</div>
+
+<script>
+"use strict";
+/* ---------------- persistence ---------------- */
+const KEY = "lighter.v1";
+let state = load();
+function load(){
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.tasks) return s; } catch(e){}
+  return { name:"", tasks:[], history:[], day:todayStr(), uid:0, welcomed:false };
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+
+/* day rollover: finished things quietly archive; unfinished just stay. no guilt. */
+(function rollover(){
+  if (state.day !== todayStr()){
+    state.tasks = state.tasks.filter(t=>{
+      if (t.done){ state.history.push({title:t.title, day:state.day}); return false; }
+      return true;
+    });
+    if (state.history.length > 200) state.history = state.history.slice(-200);
+    state.day = todayStr();
+    save();
+  }
+})();
+
+/* ---------------- AI splitting & shrinking ---------------- */
+const SPLIT_URL = "https://xazmwpozsmbrqoulizyn.supabase.co/functions/v1/lighter/split";
+let splitting = false;
+function heuristic(raw){
+  let t = raw.replace(/^(ugh|ok|so|also|then|i need to|i should|i have to|gotta|need to|remember to|don't forget( to)?)\s+/i,"").trim();
+  t = t.split(/[.,;!\n]|\bbut\b/i)[0].trim();
+  t = t.charAt(0).toUpperCase() + t.slice(1);
+  if (t.length > 42) t = t.slice(0,42).replace(/\s\S*$/,"") + "…";
+  return { title: t || "Small thing", mins: 10, first: "Do just the first 2 minutes of it." };
+}
+function heuristicSplit(raw){
+  return raw.split(/\n+|(?<=[.;!])\s+|,\s*(?:and\s+)?(?=(?:also|then|need|call|get|buy|fix|clean|email|text|book|pay|find)\b)/i)
+    .map(s=>s.trim()).filter(s=>s.length>2).slice(0,12)
+    .map(chunk=>{ const h=heuristic(chunk); return {title:h.title, mins:h.mins, first:h.first, source:chunk}; });
+}
+function makeTasks(list){
+  const made = [];
+  for (const x of list){
+    const t = { id: ++state.uid, raw: (x.source||x.title).slice(0,500), title: x.title,
+      mins: Math.max(2, Math.min(120, +x.mins||10)), first: x.first||"Do just the first 2 minutes.",
+      bucket:"unsorted", done:false };
+    state.tasks.push(t); made.push(t);
+  }
+  save();
+  return made;
+}
+function splitDump(raw){
+  splitting = true;
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), 20000);
+  fetch(SPLIT_URL, {
+    method:"POST", headers:{"Content-Type":"application/json","X-Lighter":"1"},
+    body: JSON.stringify({ raw }), signal: ctrl.signal
+  })
+  .then(r => { if(!r.ok) throw 0; return r.json(); })
+  .then(d => { makeTasks(d && Array.isArray(d.tasks) && d.tasks.length ? d.tasks : heuristicSplit(raw)); })
+  .catch(() => { makeTasks(heuristicSplit(raw)); })
+  .finally(() => {
+    clearTimeout(timer);
+    splitting = false;
+    const onSort = document.getElementById("sort").classList.contains("active");
+    if (onSort) startSort();
+    else if (document.getElementById("today").classList.contains("active")) renderToday();
+  });
+}
+
+/* ---------------- helpers ---------------- */
+const todayTasks = () => state.tasks.filter(t=>t.bucket==="today" && !t.done);
+const doneToday  = () => state.tasks.filter(t=>t.bucket==="today" && t.done);
+const unsorted   = () => state.tasks.filter(t=>t.bucket==="unsorted");
+function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+/* ---------------- navigation ---------------- */
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  if (id==="today") renderToday();
+  if (id==="everything") renderPile();
+  window.scrollTo(0,0);
+}
+
+/* ---------------- welcome ---------------- */
+function finishWelcome(){
+  const n = document.getElementById("nameInput").value.trim();
+  state.name = n; state.welcomed = true; save();
+  show("today");
+}
+
+/* ---------------- today ---------------- */
+function renderToday(){
+  const now = new Date();
+  document.getElementById("dateLine").textContent =
+    now.toLocaleDateString("en-US",{weekday:"long", month:"long", day:"numeric"});
+  const hr = now.getHours();
+  const nm = state.name ? ", " + state.name : "";
+  document.getElementById("hello").textContent =
+    (hr<12?"Good morning":hr<18?"Hi there":"Good evening") + nm + ".";
+
+  const wb = document.getElementById("waitingBox");
+  wb.innerHTML = unsorted().length
+    ? `<div class="waiting"><span>A few brain-dump things are waiting. Sort whenever — no rush.</span>
+       <button onclick="startSort()">Sort</button></div>` : "";
+
+  const list = todayTasks();
+  const mins = list.reduce((a,t)=>a+(t.mins||10),0);
+  const box = document.getElementById("summaryBox");
+  const startBtn = document.getElementById("startBtn");
+  if (list.length === 0){
+    startBtn.style.display = "none";
+    box.innerHTML = `<div class="summary allclear">
+      <div class="big">Nothing on today's plate.</div>
+      <p>${doneToday().length ? "You did the things. All of them. " : ""}Go enjoy your day.</p></div>`;
+  } else {
+    startBtn.style.display = "";
+    box.innerHTML = `<div class="summary">
+      <div class="big">Today: <em>${list.length} ${list.length===1?"thing":"things"}</em>.<br>About ${mins} minutes total.</div>
+      <div class="calm"><span class="dot"></span> Nothing is on fire. This is all very doable.</div></div>`;
+  }
+}
+
+/* ---------------- dump ---------------- */
+function openDump(){
+  document.getElementById("dumpInput").value = "";
+  show("dump");
+  setTimeout(()=>document.getElementById("dumpInput").focus(), 250);
+}
+function submitDump(){
+  const el = document.getElementById("dumpInput");
+  const raw = el.value.trim();
+  if (!raw){ el.focus(); return; }
+  el.value = "";
+  splitDump(raw.slice(0,3000));
+  startSort(); // shows the "shrinking" state until the split lands
+}
+
+/* ---------------- sort ---------------- */
+let sortQueue = [], sortIdx = 0;
+function startSort(){
+  sortQueue = unsorted();
+  sortIdx = 0;
+  show("sort");
+  nextSortCard();
+}
+function nextSortCard(){
+  const wrap = document.getElementById("sortCardWrap");
+  const btns = document.getElementById("sortBtns");
+  renderDots();
+  if (splitting && sortIdx >= sortQueue.length){
+    btns.style.display = "none";
+    wrap.innerHTML = `<div class="sort-card shrinking"><div>Shrinking it all down…</div>
+      <div class="shimmer"><span></span><span></span><span></span></div></div>`;
+    return; // splitDump() calls startSort() again when the tasks land
+  }
+  if (sortIdx >= sortQueue.length){ finishSort(false); return; }
+  const t = sortQueue[sortIdx];
+  btns.style.display = "none";
+  wrap.innerHTML = `<div class="sort-card shrinking"><div>Shrinking it down…</div>
+    <div class="shimmer"><span></span><span></span><span></span></div></div>`;
+  setTimeout(()=>{
+    if (sortQueue[sortIdx] !== t) return;
+    wrap.innerHTML = `<div class="sort-card">
+      <div class="title">${esc(t.title)}</div>
+      <span class="chip">~${t.mins} min</span>
+      <div class="first"><b>Start:</b> ${esc(t.first)}</div>
+      <button class="reveal" onclick="this.nextElementSibling.classList.toggle('show')">what you actually said ▾</button>
+      <div class="raw">“${esc(t.raw)}”</div></div>`;
+    btns.style.display = "flex";
+  }, sortIdx === 0 ? 350 : 550);
+}
+function sortPick(bucket){
+  sortQueue[sortIdx].bucket = bucket; save();
+  sortIdx++;
+  nextSortCard();
+}
+function finishSort(early){
+  if (early){ state.tasks.forEach(t=>{ if(t.bucket==="unsorted") t.bucket="later"; }); save(); }
+  document.getElementById("sortCardWrap").innerHTML = "";
+  show("today");
+}
+function renderDots(){
+  document.getElementById("sortDots").innerHTML =
+    sortQueue.map((_,i)=>`<i class="${i<sortIdx?"done":""}"></i>`).join("");
+}
+
+/* ---------------- focus ---------------- */
+let current = null, skipped = [];
+function pickNext(){
+  let list = todayTasks().filter(t=>!skipped.includes(t.id));
+  if (!list.length){ skipped = []; list = todayTasks(); }
+  return list.length ? list[0] : null;
+}
+function startFocus(){
+  current = pickNext();
+  if (!current){ show("today"); return; }
+  document.getElementById("focusStep").textContent = current.first || "Do just the first 2 minutes.";
+  document.getElementById("focusName").textContent = current.title;
+  document.getElementById("focusTime").textContent = "~" + (current.mins||10) + " min";
+  show("focus");
+}
+function markDone(){
+  current.done = true; save();
+  const n = doneToday().length, left = todayTasks().length;
+  const msgs = ["That's one.","Another one down.","Look at you go.","Unstoppable, honestly."];
+  document.getElementById("doneMsg").textContent = msgs[Math.min(n-1, msgs.length-1)];
+  document.getElementById("doneSub").textContent =
+    left===0 ? "That was the last one. Today is officially handled." : "Whenever you're ready — no rush.";
+  document.getElementById("nextBtn").style.display = left===0 ? "none" : "";
+  show("done");
+}
+function notThisOne(){ skipped.push(current.id); startFocus(); }
+function snooze(){
+  state.tasks = state.tasks.filter(x=>x.id!==current.id).concat(current); save();
+  show("today");
+}
+
+/* ---------------- everything ---------------- */
+let dropArmed = null;
+function renderPile(){
+  dropArmed = null;
+  const later = state.tasks.filter(t=>t.bucket==="later" && !t.done);
+  const uns   = unsorted();
+  const done  = doneToday();
+  const el = document.getElementById("pileList");
+  const item = (t, tag) => `<div class="pile-item" id="pi${t.id}">
+      <div class="row"><div class="t">${esc(t.title || t.raw)}</div><span class="tag">${tag}</span></div>
+      <div class="pile-actions">
+        <button class="pa-today" onclick="pileToday(${t.id})">do it today</button>
+        <button class="pa-drop" id="drop${t.id}" onclick="pileDrop(${t.id})">let it go</button>
+      </div></div>`;
+  el.innerHTML =
+    later.map(t=>item(t,"someday")).join("") +
+    uns.map(t=>item(t,"unsorted")).join("") +
+    done.map(t=>`<div class="pile-item done-item"><div class="row"><div class="t">${esc(t.title)}</div><span class="tag">done ✓</span></div></div>`).join("")
+    || `<div class="pile-item"><div class="row"><div class="t">Nothing here. Truly.</div></div></div>`;
+}
+function pileToday(id){
+  const t = state.tasks.find(x=>x.id===id);
+  if (t){ t.bucket="today"; save(); }
+  renderPile();
+}
+function pileDrop(id){
+  if (dropArmed !== id){
+    dropArmed = id;
+    const b = document.getElementById("drop"+id);
+    if (b) b.textContent = "sure? tap again";
+    return;
+  }
+  state.tasks = state.tasks.filter(x=>x.id!==id); save();
+  renderPile();
+}
+
+/* ---------------- boot ---------------- */
+if ("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+show(state.welcomed ? "today" : "welcome");
+</script>
+</body>
+</html>
